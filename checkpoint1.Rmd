@@ -1,0 +1,112 @@
+---
+title: "RecsysChallenge"
+author: "Wesley Nunes"
+date: "May 12, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(SparkR, lib.loc = "/usr/local/spark/R/lib")
+Sys.setenv('SPARKR_SUBMIT_ARGS'='"--packages" "com.databricks:spark-csv_2.11:1.4.0" "sparkr-shell"')
+sc <- sparkR.init(master = "", appName = "SparkR",
+                  sparkHome = "/usr/local/spark", sparkEnvir = list(),
+                  sparkExecutorEnv = list(), sparkJars = "", sparkPackages = "com.databricks:spark-csv_2.11:1.4.0")
+sqlContext <- sparkRSQL.init(sc)
+interactions_data <- read.df(sqlContext, "data/interactions-v01.csv", source = "com.databricks.spark.csv")
+impressions <- read.df(sqlContext, "data/impressions-v02.csv", source = "com.databricks.spark.csv")
+items <- read.df(sqlContext, "data/items_v01_fixed.csv", source = "com.databricks.spark.csv")
+region <- read.df(sqlContext, "data/regions.csv", source = "com.databricks.spark.csv")
+impressions <- read.df(sqlContext, "data/impressions-v02.csv", source = "com.databricks.spark.csv")
+users <- read.df(sqlContext, "data/users_v01_fixed.csv", source = "com.databricks.spark.csv")
+```
+
+# RecSys Challenge 2016: 
+> Problema 6/Checkpoint 1
+
+### Wesley Nunes Marques Torres
+
+A competição objeto deste lab trata da recomendação de ofertas de trabalho na
+plataforma Xing. A competição está aberta (site aqui ) e dura até meados de Junho.
+Nesta etapa nós iremos imergir nos dados para entendêlos. É nela que se busca
+entender o “comportamento” das variáveis (suas amplitudes, distribuições, valores atípicos, e
+muito mais. Formularemos perguntas que ajudarão a entender os dados e tiraremos valor das
+respostas para a sua estratégia.
+
+> Dados Utilizados
+
+Temos 5 conjuntos de dados. São eles:
+
+* users_v01 Informações sobre os usuários;
+* Regions Informações sobre as regiões;
+* items_v01 Informações sobre ofertas de emprego;
+* interations_v01 Informações sobre a interaçao dos usuários com empregos;
+* impressions A frequência em que uma oferta de emprego foi mostrada para um usuário por semana
+
+> Users
+ 
+```{r}
+str(users)
+```
+
+* id: id do usuário;
+* jobroles: id do emprego
+* career_level: O nível de carreira do usuário
+* discipline_id: id do segmento da empresa em que atua
+* industry_id : id da área em que a empresa atua
+* country: País em que o usuário atualmente trabalha
+* region :Região do país em que atua
+* experience_n_entries_class: Número de experiências de trabalho
+* experience_year_experience:Anos de experiência de trabalho estimados
+* experience_years_in_current:Número de anos que o usuário está trabalhando no emprego atual
+* edu_degree: Nível de escolaridade estimado
+* edu_fieldofstudies: id da área de conhecimento que o usuário estudou.
+
+> Regions
+ 
+```{r}
+str(region)
+```
+
+Dataset para mapeamento das regiões
+
+> items
+ 
+```{r}
+str(items)
+```
+
+* id: id do item
+* title: Titulo da oferta de emprego, numericamente
+* career_level, discipline_id, industry_id, country, region: Iguais aos de User, mas se tratando de empregos
+* Latitude ,longitude: Informações de latitude e longitude da localização da empresa
+* employment: Regime de carga�horária
+* tags :Tags relacionadas à oferta de emprego, numericamente
+* created_at: Data de criaçao da oferta
+* active_during_test: Validade da oferta
+
+> Interações
+ 
+```{r}
+str(interactions_data)
+```
+
+* user_id: id do usuário que interagiu
+* item_id: id da oferta de emprego interagida
+* interaction_type: Tipo de interação
+* created_at: Data em que a interação ocorreu
+
+> Impressions
+ 
+```{r}
+str(impressions)
+```
+
+* user_id: id do usuário em que a oferta foi mostrada
+* week: Semana do ano em que a oferta foi mostrada
+* year: Ano em que a oferta
+* item_id: id da oferta
+* frequency: Frequência com que a oferta foi mostrada/semana
+
+
+
