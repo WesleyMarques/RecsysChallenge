@@ -1,13 +1,14 @@
 ---
 title: "RecsysChallenge"
 author: "Wesley Nunes"
-date: "May 12, 2016"
+date: "May 13, 2016"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(SparkR, lib.loc = "/usr/local/spark/R/lib")
+require(dplyr)
 Sys.setenv('SPARKR_SUBMIT_ARGS'='"--packages" "com.databricks:spark-csv_2.11:1.4.0" "sparkr-shell"')
 sc <- sparkR.init(master = "", appName = "SparkR",
                   sparkHome = "/usr/local/spark", sparkEnvir = list(),
@@ -18,7 +19,7 @@ impressions <- read.df(sqlContext, "data/impressions-v02.csv", source = "com.dat
 items <- read.df(sqlContext, "data/items_v01_fixed.csv", source = "com.databricks.spark.csv")
 region <- read.df(sqlContext, "data/regions.csv", source = "com.databricks.spark.csv")
 impressions <- read.df(sqlContext, "data/impressions-v02.csv", source = "com.databricks.spark.csv")
-users <- read.df(sqlContext, "data/users_v01_fixed.csv", source = "com.databricks.spark.csv")
+users <- read.csv("data/users_v01_fixed.csv")
 ```
 
 # RecSys Challenge 2016: 
@@ -80,7 +81,7 @@ str(items)
 * title: Titulo da oferta de emprego, numericamente
 * career_level, discipline_id, industry_id, country, region: Iguais aos de User, mas se tratando de empregos
 * Latitude ,longitude: Informações de latitude e longitude da localização da empresa
-* employment: Regime de carga�horária
+* employment: Regime de carga?horária
 * tags :Tags relacionadas à oferta de emprego, numericamente
 * created_at: Data de criaçao da oferta
 * active_during_test: Validade da oferta
@@ -108,5 +109,25 @@ str(impressions)
 * item_id: id da oferta
 * frequency: Frequência com que a oferta foi mostrada/semana
 
+> Algumas observações
+
+Podemos agora realizar algumas realções. COm isso, queremos avaliar a relação entre a qualificação profissional com os cargos dos usuários
+
+```{r}
+plot(users$career_level, users$edu_degree, xlab = "career_level", ylab = "edu_degree")
+```
+
+Como podemos perceber o números de Unknown(0) juntamente com NULL está ocupando uma garnde fatia dos dados que já perdemos um pouco na nossa informação. Vemos que os executivos(5) são os que mais possuem um nível educacional maior. Isso nos confirma uma premissa natural no meio que quanto mais qualificado, melhor o cargo. Temos também que os cargos de projeto como Professional/Experienced(3) e Manager(4) são a maioria e que grande massa possuem no máximo um mestrado(2). 
+
+Será que existe um padrão de cargos nas regiões?
+
+```{r}
+user_filter <- filter(users, users$region != c(0,NULL)) %>% droplevels()
+
+plot(user_filter$region)
+plot(user_filter$region, user_filter$career_level, xlab = "Region", ylab = "Carer Level")
+
+```
 
 
+Podemos perceber que em todas as regiões com grande proporção de cargos, o maior volume é do cargo de Beginner(2), seguido pelo de Professional/Experienced(3).
